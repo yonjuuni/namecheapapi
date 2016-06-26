@@ -69,7 +69,7 @@ class Session:
         pprint(url)  # debug
         xml = fromstring(urlopen(url).read().decode('utf-8'))
         if xml.attrib['Status'] == 'ERROR':
-            self._add_error(xml)
+            self._log_error(xml)
             raise NCApiError(self.errors[-1])
         else:
             if raw:
@@ -79,7 +79,7 @@ class Session:
     def _tag(self, tag: str) -> str:
         return '{{{}}}{}'.format(NAMESPACE, tag)
 
-    def _add_error(self, xml: Element) -> None:
+    def _log_error(self, xml: Element) -> None:
 
         data = {
             'Errors': [],
@@ -117,6 +117,7 @@ class Session:
         default.
 
         Arguments:
+        command -- NC API command, separate from the rest of the query.
         query -- dict with key/value pairs for GET request.
 
         Returns:

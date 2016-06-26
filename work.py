@@ -31,9 +31,10 @@ installs required.
 from api import Session
 from api import DomainAPI
 from config import API_USER, API_KEY, USERNAME, CLIENT_IP, SANDBOX
+from pprint import pprint
 
 
-session = Session(
+api = DomainAPI(
     api_user=API_USER,
     api_key=API_KEY,
     username=USERNAME,
@@ -41,6 +42,5 @@ session = Session(
     sandbox=SANDBOX
 )
 
-api = DomainAPI(session)
-
-print(api.check(['google.com']))
+r = api.check(['google.com', 'asdasdasdasdadads.link'])
+print(r)
