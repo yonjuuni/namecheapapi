@@ -42,5 +42,6 @@ api = DomainAPI(
     sandbox=SANDBOX
 )
 
-r = api.check(['google.com', 'asdasdasdasdadads.link'])
-print(r)
+r = api.get_list()
+pprint(r)
+pprint(api.get_info('s1ck.site'))

@@ -6,7 +6,6 @@ from urllib.request import urlopen
 from xml.etree.ElementTree import fromstring
 from xml.etree.ElementTree import Element
 from api.exceptions import NCApiError
-from pprint import pprint
 
 
 URLS = {
@@ -66,14 +65,19 @@ class Session:
               raw: bool = False)-> Element:
 
         url = self._form_url(command, query)
-        pprint(url)  # debug
-        xml = fromstring(urlopen(url).read().decode('utf-8'))
+        print(url)  # debug
+
+        raw_xml = urlopen(url).read().decode('utf-8')
+
+        if raw:
+            return raw_xml
+        else:
+            xml = fromstring(raw_xml)
+
         if xml.attrib['Status'] == 'ERROR':
             self._log_error(xml)
             raise NCApiError(self.errors[-1])
         else:
-            if raw:
-                return xml
             return xml.find(self._tag('CommandResponse'))
 
     def _tag(self, tag: str) -> str:
@@ -123,4 +127,4 @@ class Session:
         Returns:
         raw XML string.
         """
-        return self._call(command, query)
+        return self._call(command, query, raw=True)

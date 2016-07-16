@@ -1,4 +1,6 @@
 import typing
+from datetime import datetime
+from math import ceil
 from xml.etree.ElementTree import fromstring
 from api.session import Session
 from api.commands import *
@@ -28,10 +30,10 @@ class DomainAPI(Session):
         Domain must be listed in your Namecheap account.
 
         Arguments:
-        domain -- domain name (e.g. 'google.com')
+            domain -- domain name (e.g. 'google.com')
 
         Returns:
-        Dict with domain information
+            Dict with domain information
         """
         xml = self._call(DOMAINS_GET_INFO, {'DomainName': domain}).find(
             self._tag('DomainGetInfoResult'))
@@ -42,18 +44,20 @@ class DomainAPI(Session):
             'Owner': xml.attrib['OwnerName'],
             'Status': xml.attrib['Status'],
             'ID': xml.attrib['ID'],
-            'IsOwner': True if xml.attrib['IsOwner'].lower() == 'true'
-            else False,
+            'IsOwner':
+                True if xml.attrib['IsOwner'].lower() == 'true' else False,
             'Full modification rights':
                 True if (xml.find(self._tag('Modificationrights')).
                          attrib['All'].lower() == 'true')
                 else False
         }
 
-        result['Created on'] = xml.find(self._tag('DomainDetails')).find(
-            self._tag('CreatedDate')).text
-        result['Expires on'] = xml.find(self._tag('DomainDetails')).find(
-            self._tag('ExpiredDate')).text
+        result['Creation'] = datetime.strptime(xml.find(
+            self._tag('DomainDetails')).find(self._tag('CreatedDate')).text,
+            '%m/%d/%Y')
+        result['Expiration'] = datetime.strptime(xml.find(
+            self._tag('DomainDetails')).find(self._tag('ExpiredDate')).text,
+            '%m/%d/%Y')
 
         # WhoisGuard details
         wg = xml.find(self._tag('Whoisguard'))
@@ -61,7 +65,9 @@ class DomainAPI(Session):
             'Enabled':
                 True if wg.attrib['Enabled'].lower() == 'true'
                 else False,
-            'Expires on': wg.find(self._tag('ExpiredDate')).text,
+            'Expiration':
+                datetime.strptime(wg.find(self._tag('ExpiredDate')).text,
+                                  '%m/%d/%Y'),
             'ID': wg.find(self._tag('ID')).text,
             'Email':
                 wg.find(self._tag('EmailDetails')).attrib['WhoisGuardEmail'],
@@ -69,7 +75,10 @@ class DomainAPI(Session):
                 wg.find(self._tag('EmailDetails')).attrib['ForwardedTo'],
             'Last email auto-change date':
                 wg.find(self._tag('EmailDetails')).attrib[
-                    'LastAutoEmailChangeDate'],
+                'LastAutoEmailChangeDate']
+                if wg.find(self._tag('EmailDetails')).attrib[
+                    'LastAutoEmailChangeDate']
+                else None,
             'Email auto-change frequency':
                 wg.find(self._tag('EmailDetails')).attrib[
                     'AutoEmailChangeFrequencyDays']
@@ -79,8 +88,8 @@ class DomainAPI(Session):
         pdns = xml.find(self._tag('PremiumDnsSubscription'))
 
         result['PremiumDNS'] = {
-            'Created on': pdns.find(self._tag('CreatedDate')).text,
-            'Expires on': pdns.find(self._tag('ExpirationDate')).text,
+            'Creation': pdns.find(self._tag('CreatedDate')).text,
+            'Expiration': pdns.find(self._tag('ExpirationDate')).text,
             'ID': pdns.find(self._tag('SubscriptionId')).text,
             'Auto-renew': True if pdns.find(
                 self._tag('UseAutoRenew')).text.lower() == 'true' else False,
@@ -98,17 +107,74 @@ class DomainAPI(Session):
                 else False,
             'Host records count': dns.attrib['HostCount'],
             'Email type': dns.attrib['EmailType'],
-            'Dynamic DNS': dns.attrib['DynamicDNSStatus'],
-            'Failover DNS': dns.attrib['IsFailover'],
+            'Dynamic DNS':
+                True if dns.attrib['DynamicDNSStatus'].lower() == 'true'
+                else False,
+            'Failover DNS': True if dns.attrib['IsFailover'].lower() == 'true'
+                else False,
             'Nameservers': [ns.text for ns in
                             dns.findall(self._tag('Nameserver'))]
         }
 
         return result
 
-    def get_list(self):
-        pass
+    def get_list(self, _type: str = 'ALL',
+                 search_term: str = '') -> typing.List[dict]:
+        """Get the list of domains.
 
+        Arguments:
+            _type - possible values: 'ALL', 'EXPIRING', 'EXPIRED'
+            search_term - keyword to look for in the domain list.
+
+        Returns:
+            A list containing dicts with domain information.
+        """
+
+        domains = []
+
+        # A check on the total domain number (minimal PageSize is 10)
+        xml = self._call(
+            DOMAINS_GET_LIST, {'ListType': _type,
+                               'SearchTerm': search_term,
+                               'PageSize': 10}).find(
+            self._tag('Paging'))
+        total_domains = int(xml.find(self._tag('TotalItems')).text)
+
+        # A call is sent for every 100-item page
+        # TODO: check performance on big accounts
+        for page in range(1, ceil(total_domains / 100) + 1):
+
+            xml = self._call(
+                DOMAINS_GET_LIST, {'ListType': _type,
+                                   'SearchTerm': search_term,
+                                   'Page': page,
+                                   'PageSize': 100}).find(
+                self._tag('DomainGetListResult'))
+
+            for domain in xml.findall(self._tag('Domain')):
+                domains.append({
+                    'Domain': domain.attrib['Name'],
+                    'ID': domain.attrib['ID'],
+                    'Owner': domain.attrib['User'],
+                    'Creation': datetime.strptime(domain.attrib['Created'],
+                                                  '%m/%d/%Y'),
+                    'Expiration': datetime.strptime(domain.attrib['Expires'],
+                                                    '%m/%d/%Y'),
+                    'WhoisGuard': domain.attrib['WhoisGuard'],
+                    'Expired':
+                        True if domain.attrib['IsExpired'].lower() == 'true'
+                        else False,
+                    'Locked':
+                        True if domain.attrib['IsLocked'].lower() == 'true'
+                        else False,
+                    'Auto-renew':
+                        True if domain.attrib['AutoRenew'].lower() == 'true'
+                        else False,
+                })
+
+        return domains
+
+    # TODO
     def get_tld_list(self) -> str:
         xml = self._call(DOMAINS_GET_TLD_LIST)
         res = {}
