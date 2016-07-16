@@ -44,12 +44,10 @@ class DomainAPI(Session):
             'Owner': xml.attrib['OwnerName'],
             'Status': xml.attrib['Status'],
             'ID': xml.attrib['ID'],
-            'IsOwner':
-                True if xml.attrib['IsOwner'].lower() == 'true' else False,
+            'IsOwner': xml.attrib['IsOwner'].lower() == 'true',
             'Full modification rights':
-                True if (xml.find(self._tag('Modificationrights')).
-                         attrib['All'].lower() == 'true')
-                else False
+                xml.find(self._tag('Modificationrights')).
+                attrib['All'].lower() == 'true'
         }
 
         result['Creation'] = datetime.strptime(xml.find(
@@ -62,9 +60,7 @@ class DomainAPI(Session):
         # WhoisGuard details
         wg = xml.find(self._tag('Whoisguard'))
         result['WhoisGuard'] = {
-            'Enabled':
-                True if wg.attrib['Enabled'].lower() == 'true'
-                else False,
+            'Enabled': wg.attrib['Enabled'].lower() == 'true',
             'Expiration':
                 datetime.strptime(wg.find(self._tag('ExpiredDate')).text,
                                   '%m/%d/%Y'),
@@ -91,27 +87,20 @@ class DomainAPI(Session):
             'Creation': pdns.find(self._tag('CreatedDate')).text,
             'Expiration': pdns.find(self._tag('ExpirationDate')).text,
             'ID': pdns.find(self._tag('SubscriptionId')).text,
-            'Auto-renew': True if pdns.find(
-                self._tag('UseAutoRenew')).text.lower() == 'true' else False,
-            'Active':
-                True if pdns.find(self._tag('IsActive')).text.lower() == 'true'
-                else False
+            'Auto-renew': pdns.find(
+                self._tag('UseAutoRenew')).text.lower() == 'true',
+            'Active': pdns.find(self._tag('IsActive')).text.lower() == 'true'
         }
 
         # DNS details
         dns = xml.find(self._tag('DnsDetails'))
         result['DNS'] = {
             'Type': dns.attrib['ProviderType'],
-            'Using NC DNS':
-                True if dns.attrib['IsUsingOurDNS'].lower() == 'true'
-                else False,
+            'Using NC DNS': dns.attrib['IsUsingOurDNS'].lower() == 'true',
             'Host records count': dns.attrib['HostCount'],
             'Email type': dns.attrib['EmailType'],
-            'Dynamic DNS':
-                True if dns.attrib['DynamicDNSStatus'].lower() == 'true'
-                else False,
-            'Failover DNS': True if dns.attrib['IsFailover'].lower() == 'true'
-                else False,
+            'Dynamic DNS': dns.attrib['DynamicDNSStatus'].lower() == 'true',
+            'Failover DNS': dns.attrib['IsFailover'].lower() == 'true',
             'Nameservers': [ns.text for ns in
                             dns.findall(self._tag('Nameserver'))]
         }
@@ -161,15 +150,9 @@ class DomainAPI(Session):
                     'Expiration': datetime.strptime(domain.attrib['Expires'],
                                                     '%m/%d/%Y'),
                     'WhoisGuard': domain.attrib['WhoisGuard'],
-                    'Expired':
-                        True if domain.attrib['IsExpired'].lower() == 'true'
-                        else False,
-                    'Locked':
-                        True if domain.attrib['IsLocked'].lower() == 'true'
-                        else False,
-                    'Auto-renew':
-                        True if domain.attrib['AutoRenew'].lower() == 'true'
-                        else False,
+                    'Expired': domain.attrib['IsExpired'].lower() == 'true',
+                    'Locked': domain.attrib['IsLocked'].lower() == 'true',
+                    'Auto-renew': domain.attrib['AutoRenew'].lower() == 'true',
                 })
 
         return domains
@@ -199,7 +182,7 @@ class DomainAPI(Session):
         result = {}
         for item in xml.findall(self._tag('DomainCheckResult')):
             result[item.attrib['Domain']] = (
-                True if item.attrib['Available'] == 'true' else False)
+                item.attrib['Available'] == 'true')
 
         return result
 
