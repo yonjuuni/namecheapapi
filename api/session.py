@@ -24,17 +24,21 @@ class Session:
     """
 
     def __init__(self, api_user: str, api_key: str, username: str,
-                 client_ip: str, sandbox: bool = True) -> None:
+                 client_ip: str, sandbox: bool = True,
+                 coupon: str = None) -> None:
         """API initialization.
 
         Arguments:
-        api_user -- NC API username.
-        api_key -- NC API key.
-        username -- your Namecheap username (in most cases).
-        client_ip -- public IP address of the machine making API calls
-            (MUST be whitelisted in your Namecheap account).
-        sandbox -- optional argument. Should be set to True for testing
-            and False on production.
+            api_user -- NC API username.
+            api_key -- NC API key.
+            username -- your Namecheap username (in most cases).
+            client_ip -- public IP address of the machine making API
+                calls (MUST be whitelisted in your Namecheap account).
+            sandbox -- optional argument. Should be set to True for
+                testing and False on production.
+            coupon -- coupon code, if you wish to use one. None by
+                default.
+
         """
         self.api_user = api_user
         self.api_key = api_key
@@ -42,6 +46,7 @@ class Session:
         self.client_ip = client_ip
         self.url = URLS['sandbox' if sandbox else 'production']
         self.errors = []
+        self.coupon = coupon
 
     @property
     def _base_params(self) -> dict:
@@ -63,6 +68,22 @@ class Session:
 
     def _call(self, command: str, query: dict = {},
               raw: bool = False)-> Element:
+        """Send GET request with the API call
+
+        Arguments:
+            command -- NC API command
+            query -- key/value pairs for GET request
+            raw -- used in raw_query method. Makes the method return a
+                raw XML string
+
+        Returns:
+            raw=False -- ElementTree.Element object in CommandResponse
+                namespace
+            raw=True -- full XML response string
+
+        Raises:
+            NCApiError if response Status equals to 'ERROR'.
+        """
 
         url = self._form_url(command, query)
         print(url)  # debug
@@ -81,9 +102,15 @@ class Session:
             return xml.find(self._tag('CommandResponse'))
 
     def _tag(self, tag: str) -> str:
+        """Create tag to navigate through ElementTree.Element object.
+        """
         return '{{{}}}{}'.format(NAMESPACE, tag)
 
     def _log_error(self, xml: Element) -> None:
+        """Log an API error.
+
+        Adds errors and warnings to session.errors list.
+        """
 
         data = {
             'Errors': [],
@@ -121,10 +148,11 @@ class Session:
         default.
 
         Arguments:
-        command -- NC API command, separate from the rest of the query.
-        query -- dict with key/value pairs for GET request.
+            command -- NC API command, separate from the rest of the
+                query.
+            query -- dict with key/value pairs for GET request.
 
         Returns:
-        raw XML string.
+            raw XML string.
         """
         return self._call(command, query, raw=True)

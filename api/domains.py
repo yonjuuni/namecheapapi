@@ -183,6 +183,7 @@ class DomainAPI(Session):
             tld_name = tld.attrib['Name']
             res[tld_name] = tld.attrib
             res[tld_name]['Description'] = tld.text
+            del res[tld_name]['Name']
 
             # Normalize dict values
             for key in res[tld_name]:
@@ -202,19 +203,20 @@ class DomainAPI(Session):
 
         return res
 
-    def check(self, domains: typing.Iterable[str]) -> dict:
+    def check(self, domains: typing.Iterable[str]) -> typing.Dict[str, bool]:
         """Check domain availability.
 
         https://www.namecheap.com/support/api/methods/domains/check.aspx
 
         Arguments:
-        domains -- any iterable (str for single domain; list, set,
-        dict for multiple domains)
+            domains -- any iterable (str for single domain; list, set,
+            dict for multiple domains)
 
         Returns:
-        Dict with boolean values for domain availability.
-        E.g.:
-            {'google.com': False, 'yourawesomedomain.name': True}
+            Dict with boolean values for domain availability.
+            E.g.:
+                {'google.com': False,
+                 'yourawesomedomain.name': True}
 
         """
         if isinstance(domains, str):
