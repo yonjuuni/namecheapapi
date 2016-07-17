@@ -9,7 +9,7 @@ https://ap.www.sandbox.namecheap.com/Profile/Tools/ApiAccess
 Make sure to add your public IP address in Whitelisted IPs section.
 
 Keep in mind that sandbox domains are not 'real', i.e. they exist only
-in Namecheap sandbox (not nn the actual Web). With that you may be able
+in Namecheap sandbox (not on the actual Web). With that you may be able
 to see google.com as available for registration. At the same time, you
 will need to make sure to register your 'virtual' domains if you want to
 test domain-specific options, such as renewal, DNS updates, etc.
@@ -42,6 +42,4 @@ api = DomainAPI(
     sandbox=SANDBOX
 )
 
-r = api.get_list()
-pprint(r)
-pprint(api.get_info('s1ck.site'))
+pprint(api.get_tld_list())

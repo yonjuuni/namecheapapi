@@ -27,6 +27,8 @@ class DomainAPI(Session):
     def get_info(self, domain: str) -> dict:
         """Get domain information.
 
+        https://www.namecheap.com/support/api/methods/domains/get-info.aspx
+
         Domain must be listed in your Namecheap account.
 
         Arguments:
@@ -111,6 +113,8 @@ class DomainAPI(Session):
                  search_term: str = '') -> typing.List[dict]:
         """Get the list of domains.
 
+        https://www.namecheap.com/support/api/methods/domains/get-list.aspx
+
         Arguments:
             _type - possible values: 'ALL', 'EXPIRING', 'EXPIRED'
             search_term - keyword to look for in the domain list.
@@ -157,13 +161,51 @@ class DomainAPI(Session):
 
         return domains
 
-    # TODO
-    def get_tld_list(self) -> str:
-        xml = self._call(DOMAINS_GET_TLD_LIST)
+    def get_tld_list(self) -> typing.Dict[str, dict]:
+        """Get TLD list
+
+        https://www.namecheap.com/support/api/methods/domains/get-tld-list.aspx
+
+        NOTE: Namecheap strongly recommend that you cache this API
+        response to avoid repeated calls.
+
+        Returns:
+            A dict:
+            {'tld': {details...},
+             'tld2': {details...}
+            }
+        """
+        xml = self._call(DOMAINS_GET_TLD_LIST).find(self._tag('Tlds'))
+
         res = {}
+
+        for tld in xml.findall(self._tag('Tld')):
+            tld_name = tld.attrib['Name']
+            res[tld_name] = tld.attrib
+            res[tld_name]['Description'] = tld.text
+
+            # Normalize dict values
+            for key in res[tld_name]:
+                if res[tld_name][key].lower() == 'false':
+                    res[tld_name][key] = False
+                elif res[tld_name][key].lower() == 'true':
+                    res[tld_name][key] = True
+                elif res[tld_name][key].lower() == '':
+                    res[tld_name][key] = None
+                else:
+                    try:
+                        int(res[tld_name][key])
+                    except ValueError:
+                        pass
+                    else:
+                        res[tld_name][key] = int(res[tld_name][key])
+
+        return res
 
     def check(self, domains: typing.Iterable[str]) -> dict:
         """Check domain availability.
+
+        https://www.namecheap.com/support/api/methods/domains/check.aspx
 
         Arguments:
         domains -- any iterable (str for single domain; list, set,
