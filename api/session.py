@@ -4,6 +4,7 @@
 from urllib.parse import urlencode
 from urllib.request import urlopen
 from xml.etree.ElementTree import fromstring
+from xml.etree.ElementTree import tostring
 from xml.etree.ElementTree import Element
 from api.exceptions import NCApiError
 
@@ -67,7 +68,7 @@ class Session:
         })
 
     def _call(self, command: str, query: dict = {},
-              raw: bool = False)-> Element:
+              raw: bool = False) -> Element:
         """Send GET request with the API call
 
         Arguments:
@@ -96,8 +97,8 @@ class Session:
             xml = fromstring(raw_xml)
 
         if xml.attrib['Status'] == 'ERROR':
-            self._log_error(xml)
-            raise NCApiError(self.errors[-1])
+            self._log_error(xml, url)
+            raise NCApiError(self.errors[-1]['Errors'])
         else:
             return xml.find(self._tag('CommandResponse'))
 
@@ -106,13 +107,15 @@ class Session:
         """
         return '{{{}}}{}'.format(NAMESPACE, tag)
 
-    def _log_error(self, xml: Element) -> None:
+    def _log_error(self, xml: Element, url: str) -> None:
         """Log an API error.
 
         Adds errors and warnings to session.errors list.
         """
 
         data = {
+            'URL': url,
+            'XML': tostring(xml, encoding='unicode'),
             'Errors': [],
             'Warnings': []
         }
