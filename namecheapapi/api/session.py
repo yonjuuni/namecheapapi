@@ -7,7 +7,7 @@ from urllib.request import urlopen
 from xml.etree.ElementTree import fromstring
 from xml.etree.ElementTree import tostring
 from xml.etree.ElementTree import Element
-from api.exceptions import NCApiError
+from .exceptions import NCApiError
 
 
 URLS = {
@@ -49,6 +49,7 @@ class Session:
         self.url = URLS['sandbox' if sandbox else 'production']
         self.errors = []
         self.coupon = coupon
+        self.gmt_offset = None
 
     @property
     def _base_params(self) -> dict:
@@ -61,10 +62,12 @@ class Session:
         }
 
     def _get_gmt_offset(self) -> None:
-        xml = fromstring(self.raw_query())
-        self.gmt_offset = int(re.findall(
-            r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0]
-        )
+        if not self.gmt_offset:
+            xml = fromstring(self.raw_query())
+            self.gmt_offset = int(re.findall(
+                r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0]
+            )
+        return self.gmt_offset
 
     def _form_url(self, command: str, query: dict) -> str:
 

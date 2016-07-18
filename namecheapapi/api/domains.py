@@ -3,8 +3,8 @@ from datetime import datetime
 from datetime import timedelta
 from math import ceil
 from xml.etree.ElementTree import fromstring
-from api.session import Session
-from api.commands import *
+from .session import Session
+from .commands import *
 
 
 class DomainAPI(Session):

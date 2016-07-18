@@ -28,9 +28,8 @@ directory and fill it in with the following variables:
 Run 'python3 -i work.py' and feel free to play around. No additional
 installs required.
 """
-from api import Session
-from api import DomainAPI
-from config import API_USER, API_KEY, USERNAME, CLIENT_IP, SANDBOX
+from namecheapapi import DomainAPI
+from config import API_USER, API_KEY, USERNAME, CLIENT_IP, SANDBOX, COUPON
 from pprint import pprint
 
 
@@ -39,7 +38,8 @@ api = DomainAPI(
     api_key=API_KEY,
     username=USERNAME,
     client_ip=CLIENT_IP,
-    sandbox=SANDBOX
+    sandbox=SANDBOX,
+    coupon=COUPON
 )
 
-pprint(api.get_tld_list())
+print(api.renew('s1ck.club', check_status_first=True))
