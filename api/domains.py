@@ -1,5 +1,6 @@
 import typing
 from datetime import datetime
+from datetime import timedelta
 from math import ceil
 from xml.etree.ElementTree import fromstring
 from api.session import Session
@@ -11,18 +12,99 @@ class DomainAPI(Session):
     def register(self):
         pass
 
-    def renew(self, domain: str, years: int,
-              check_status_first: bool = False):
+    def renew(self, domain: str, years: int = 1, coupon: str = None,
+              check_status_first: bool = False) -> dict:
         """Domain renewal option.
 
-        If check_status_first is set to True, get_info() will be
-        called first to check if the domain is expired. If it is,
-        reactivate() will be called instead.
-        """
-        pass
+        https://www.namecheap.com/support/api/methods/domains/renew.aspx
 
-    def reactivate(self, domain: str):
-        pass
+        NOTE: this method will charge your Namecheap account!
+
+        ***Premium Domain renewals are not supported at this time***
+
+        Arguments:
+            domain -- domain name
+            years -- renewal years (default: 1)
+            coupon -- coupon code. If provided, overrides the
+                session-specified coupon.
+            check_status_first* -- if set to True, get_info() will be
+                called first to check if the domain is expired. If it
+                is, reactivate() will be called instead.
+
+        Returns:
+            A dict with order-related information.
+
+        *check_status_first is experimental, use with caution.
+        """
+        if check_status_first:
+            self._get_gmt_offset()
+            domain_info = self.get_info(domain)
+            if (domain_info['Expiration'] - timedelta(hours=self.gmt_offset) <
+                    datetime.utcnow()):
+                return self.reactivate(domain, coupon=coupon)
+
+        query = {'DomainName': domain, 'Years': years}
+
+        if coupon:
+            query['PromotionCode'] = coupon
+        elif self.coupon:
+            query['PromotionCode'] = coupon
+
+        xml = self._call(DOMAINS_RENEW, query).find(
+            self._tag('DomainRenewResult'))
+
+        return {
+            'Domain': xml.attrib['DomainName'],
+            'ID': int(xml.attrib['DomainID']),
+            'Success': xml.attrib['Renew'].lower() == 'true',
+            'OrderID': int(xml.attrib['OrderID']),
+            'TransactionID': int(xml.attrib['TransactionID']),
+            'ChargedAmount': float(xml.attrib['ChargedAmount']),
+            'Expiration':
+                datetime.strptime(xml.find(
+                    self._tag('DomainDetails')).find(
+                    self._tag('ExpiredDate')).text, '%m/%d/%Y %I:%M:%S %p')
+        }
+
+    def reactivate(self, domain: str, years: int = 1,
+                   coupon: str = None) -> dict:
+        """Reactivate the domain.
+
+        https://www.namecheap.com/support/api/methods/domains/reactivate.aspx
+
+        NOTE: this method will charge your Namecheap account! Also, even
+            though years is a modifiable argument, it's advisable to
+            leave it at a minimal value (e.g. 1 year), as trying to add
+            more years may result in an error.
+
+        ***Premium Domains reactivation is not supported at this time***
+
+        Arguments:
+            domain -- domain name
+            years -- renewal years (default: 1)
+            coupon -- coupon code. If provided, overrides the
+                session-specified coupon.
+
+        Returns:
+            A dict with order-related information.
+        """
+        query = {'DomainName': domain, 'YearsToAdd': years}
+
+        if coupon:
+            query['PromotionCode'] = coupon
+        elif self.coupon:
+            query['PromotionCode'] = coupon
+
+        xml = self._call(DOMAINS_REACTIVATE, query).find(
+            self._tag('DomainReactivateResult'))
+
+        return {
+            'Domain': xml.attrib['Domain'],
+            'Success': xml.attrib['IsSuccess'].lower() == 'true',
+            'OrderID': int(xml.attrib['OrderID']),
+            'TransactionID': int(xml.attrib['TransactionID']),
+            'ChargedAmount': float(xml.attrib['ChargedAmount']),
+        }
 
     def get_info(self, domain: str) -> dict:
         """Get domain information.
@@ -73,10 +155,7 @@ class DomainAPI(Session):
                 wg.find(self._tag('EmailDetails')).attrib['ForwardedTo'],
             'Last email auto-change date':
                 wg.find(self._tag('EmailDetails')).attrib[
-                'LastAutoEmailChangeDate']
-                if wg.find(self._tag('EmailDetails')).attrib[
-                    'LastAutoEmailChangeDate']
-                else None,
+                'LastAutoEmailChangeDate'] or None,
             'Email auto-change frequency':
                 wg.find(self._tag('EmailDetails')).attrib[
                     'AutoEmailChangeFrequencyDays']
@@ -110,7 +189,7 @@ class DomainAPI(Session):
         return result
 
     def get_list(self, _type: str = 'ALL',
-                 search_term: str = '') -> typing.List[dict]:
+                 search_term: str = None) -> typing.List[dict]:
         """Get the list of domains.
 
         https://www.namecheap.com/support/api/methods/domains/get-list.aspx
@@ -122,27 +201,30 @@ class DomainAPI(Session):
         Returns:
             A list containing dicts with domain information.
         """
-
         domains = []
 
         # A check on the total domain number (minimal PageSize is 10)
-        xml = self._call(
-            DOMAINS_GET_LIST, {'ListType': _type,
-                               'SearchTerm': search_term,
-                               'PageSize': 10}).find(
-            self._tag('Paging'))
+        query = {'ListType': _type, 'PageSize': 10}
+        if search_term:
+            query['SearchTerm'] = search_term
+
+        xml = self._call(DOMAINS_GET_LIST, query).find(self._tag('Paging'))
         total_domains = int(xml.find(self._tag('TotalItems')).text)
 
         # A call is sent for every 100-item page
         # TODO: check performance on big accounts
         for page in range(1, ceil(total_domains / 100) + 1):
 
+            query = {
+                'ListType': _type,
+                'Page': page,
+                'PageSize': 100
+            }
+            if search_term:
+                query['SearchTerm'] = search_term
+
             xml = self._call(
-                DOMAINS_GET_LIST, {'ListType': _type,
-                                   'SearchTerm': search_term,
-                                   'Page': page,
-                                   'PageSize': 100}).find(
-                self._tag('DomainGetListResult'))
+                DOMAINS_GET_LIST, query).find(self._tag('DomainGetListResult'))
 
             for domain in xml.findall(self._tag('Domain')):
                 domains.append({

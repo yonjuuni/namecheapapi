@@ -8,5 +8,7 @@ Implemented methods:
 * domains.get_info
 * domains.get_list
 * domains.get_tld_list
+* domains.renew
+* domains.reactivate
 
 See docstring in work.py for current usage tips.

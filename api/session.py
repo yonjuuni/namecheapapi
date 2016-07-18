@@ -1,6 +1,7 @@
 """
 """
-
+import re
+from datetime import datetime
 from urllib.parse import urlencode
 from urllib.request import urlopen
 from xml.etree.ElementTree import fromstring
@@ -59,6 +60,12 @@ class Session:
             'ClientIp': self.client_ip,
         }
 
+    def _get_gmt_offset(self) -> None:
+        xml = fromstring(self.raw_query())
+        self.gmt_offset = int(re.findall(
+            r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0]
+        )
+
     def _form_url(self, command: str, query: dict) -> str:
 
         return self.url + urlencode({
@@ -98,7 +105,10 @@ class Session:
 
         if xml.attrib['Status'] == 'ERROR':
             self._log_error(xml, url)
-            raise NCApiError(self.errors[-1]['Errors'])
+            error_message = ', '.join(
+                ["Error {}: '{}'".format(item['Number'], item['Text'])
+                 for item in self.errors[-1]['Errors']])
+            raise NCApiError(error_message)
         else:
             return xml.find(self._tag('CommandResponse'))
 
@@ -116,6 +126,7 @@ class Session:
         data = {
             'URL': url,
             'XML': tostring(xml, encoding='unicode'),
+            'Time': datetime.now(),
             'Errors': [],
             'Warnings': []
         }
