@@ -195,8 +195,8 @@ class DomainAPI(Session):
         https://www.namecheap.com/support/api/methods/domains/get-list.aspx
 
         Arguments:
-            _type - possible values: 'ALL', 'EXPIRING', 'EXPIRED'
-            search_term - keyword to look for in the domain list.
+            _type -- possible values: 'ALL', 'EXPIRING', 'EXPIRED'
+            search_term -- keyword to look for in the domain list.
 
         Returns:
             A list containing dicts with domain information.
@@ -251,6 +251,9 @@ class DomainAPI(Session):
         NOTE: Namecheap strongly recommend that you cache this API
         response to avoid repeated calls.
 
+        Arguments:
+            None
+
         Returns:
             A dict:
             {'tld': {details...},
@@ -292,7 +295,7 @@ class DomainAPI(Session):
 
         Arguments:
             domains -- any iterable (str for single domain; list, set,
-            dict for multiple domains)
+                dict for multiple domains)
 
         Returns:
             Dict with boolean values for domain availability.
@@ -318,11 +321,64 @@ class DomainAPI(Session):
     def set_contacts(self):
         pass
 
-    def get_lock(self):
-        pass
+    def get_lock(self, domain: str, verbose: bool = False) -> bool:
+        """Get registrar lock status
 
-    def set_lock(self):
-        pass
+        https://www.namecheap.com/support/api/methods/domains/get-registrar-lock.aspx
+
+        Arguments:
+            domain -- domain name
+            verbose -- (bool) set to True if you want to get detailed
+                lock info (see Returns section below).
+
+        Returns:
+            A boolean value representing the lock status.
+
+            Use verbose=True if you want to get the detailed info that
+                includes ClientUpdateProhibited, ClientDeleteProhibited
+                and ClientHold statuses.
+        """
+        xml = self._call(DOMAINS_GET_LOCK, {
+            'DomainName': domain
+        }).find(self._tag('DomainGetRegistrarLockResult'))
+
+        if not verbose:
+            return xml.attrib['RegistrarLockStatus'].lower() == 'true'
+
+        return {
+            'Domain': xml.attrib['Domain'],
+            'RegistrarLock':
+                xml.attrib['RegistrarLockStatus'].lower() == 'true',
+            'ClientUpdateProhibited':
+                xml.attrib['IsClientUpdateProhibited'].lower() == 'true',
+            'ClientDeleteProhibited':
+                xml.attrib['IsClientDeleteProhibited'].lower() == 'true',
+            'ClientHold':
+                xml.attrib['IsClientHold'].lower() == 'true'
+        }
+
+    def set_lock(self, domain: str, lock: bool = True) -> bool:
+        """Set registrar lock
+
+        https://www.namecheap.com/support/api/methods/domains/set-registrar-lock.aspx
+
+        Arguments:
+            domain -- domain name
+            lock -- lock (True/False)
+
+        Returns:
+            True if lock status was successfully updated, False
+                otherwise
+        """
+        query = {
+            'DomainName': domain,
+            'LockAction': 'LOCK' if lock else 'UNLOCK'
+        }
+
+        xml = self._call(DOMAINS_SET_LOCK, query).find(
+            self._tag('DomainSetRegistrarLockResult'))
+
+        return xml.attrib['IsSuccess'].lower() == 'true'
 
     def create_nameserver(self):
         pass
