@@ -38,3 +38,11 @@ def test_domains_get_info():
 @raises(NCApiError)
 def test_ncapi_error():
     return api._call('')
+
+
+def test_domain_get_lock():
+    return api.get_lock(DOMAIN)
+
+
+def test_domain_set_lock():
+    return api.get_lock(DOMAIN)

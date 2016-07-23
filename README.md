@@ -15,10 +15,10 @@ Implemented methods:
 * domains.renew (namecheap.domains.renew)
 * domains.reactivate (namecheap.domains.reactivate)
 * domains.get_lock (namecheap.domains.getRegistrarLock)
+* domains.set_lock (namecheap.domains.setRegistrarLock)
 
 Next up:
 - domains.register (namecheap.domains.create)
-- domains.set_lock (namecheap.domains.setRegistrarLock)
 - domains.create_nameserver (namecheap.domains.ns.create)
 - domains.delete_nameserver (namecheap.domains.ns.delete)
 - domains.update_nameserver (namecheap.domains.ns.update)

@@ -54,12 +54,12 @@ class DomainAPI(Session):
             self._tag('DomainRenewResult'))
 
         return {
-            'Domain': xml.attrib['DomainName'],
-            'ID': int(xml.attrib['DomainID']),
-            'Success': xml.attrib['Renew'].lower() == 'true',
-            'OrderID': int(xml.attrib['OrderID']),
-            'TransactionID': int(xml.attrib['TransactionID']),
-            'ChargedAmount': float(xml.attrib['ChargedAmount']),
+            'Domain': xml.get('DomainName'),
+            'ID': int(xml.get('DomainID')),
+            'Success': xml.get('Renew').lower() == 'true',
+            'OrderID': int(xml.get('OrderID')),
+            'TransactionID': int(xml.get('TransactionID')),
+            'ChargedAmount': float(xml.get('ChargedAmount')),
             'Expiration':
                 datetime.strptime(xml.find(
                     self._tag('DomainDetails')).find(
@@ -99,11 +99,11 @@ class DomainAPI(Session):
             self._tag('DomainReactivateResult'))
 
         return {
-            'Domain': xml.attrib['Domain'],
-            'Success': xml.attrib['IsSuccess'].lower() == 'true',
-            'OrderID': int(xml.attrib['OrderID']),
-            'TransactionID': int(xml.attrib['TransactionID']),
-            'ChargedAmount': float(xml.attrib['ChargedAmount']),
+            'Domain': xml.get('Domain'),
+            'Success': xml.get('IsSuccess').lower() == 'true',
+            'OrderID': int(xml.get('OrderID')),
+            'TransactionID': int(xml.get('TransactionID')),
+            'ChargedAmount': float(xml.get('ChargedAmount')),
         }
 
     def get_info(self, domain: str) -> dict:
@@ -124,14 +124,14 @@ class DomainAPI(Session):
 
         # Basic information
         result = {
-            'Domain': xml.attrib['DomainName'],
-            'Owner': xml.attrib['OwnerName'],
-            'Status': xml.attrib['Status'],
-            'ID': xml.attrib['ID'],
-            'IsOwner': xml.attrib['IsOwner'].lower() == 'true',
+            'Domain': xml.get('DomainName'),
+            'Owner': xml.get('OwnerName'),
+            'Status': xml.get('Status'),
+            'ID': xml.get('ID'),
+            'IsOwner': xml.get('IsOwner').lower() == 'true',
             'Full modification rights':
                 xml.find(self._tag('Modificationrights')).
-                attrib['All'].lower() == 'true'
+                get('All').lower() == 'true'
         }
 
         result['Creation'] = datetime.strptime(xml.find(
@@ -144,21 +144,21 @@ class DomainAPI(Session):
         # WhoisGuard details
         wg = xml.find(self._tag('Whoisguard'))
         result['WhoisGuard'] = {
-            'Enabled': wg.attrib['Enabled'].lower() == 'true',
+            'Enabled': wg.get('Enabled').lower() == 'true',
             'Expiration':
                 datetime.strptime(wg.find(self._tag('ExpiredDate')).text,
                                   '%m/%d/%Y'),
             'ID': wg.find(self._tag('ID')).text,
             'Email':
-                wg.find(self._tag('EmailDetails')).attrib['WhoisGuardEmail'],
+                wg.find(self._tag('EmailDetails')).get('WhoisGuardEmail'),
             'Forwarded to':
-                wg.find(self._tag('EmailDetails')).attrib['ForwardedTo'],
+                wg.find(self._tag('EmailDetails')).get('ForwardedTo'),
             'Last email auto-change date':
-                wg.find(self._tag('EmailDetails')).attrib[
-                'LastAutoEmailChangeDate'] or None,
+                wg.find(self._tag('EmailDetails')).get(
+                'LastAutoEmailChangeDate') or None,
             'Email auto-change frequency':
-                wg.find(self._tag('EmailDetails')).attrib[
-                    'AutoEmailChangeFrequencyDays']
+                wg.find(self._tag('EmailDetails')).get(
+                    'AutoEmailChangeFrequencyDays')
         }
 
         # Premium DNS details
@@ -176,12 +176,12 @@ class DomainAPI(Session):
         # DNS details
         dns = xml.find(self._tag('DnsDetails'))
         result['DNS'] = {
-            'Type': dns.attrib['ProviderType'],
-            'Using NC DNS': dns.attrib['IsUsingOurDNS'].lower() == 'true',
-            'Host records count': dns.attrib['HostCount'],
-            'Email type': dns.attrib['EmailType'],
-            'Dynamic DNS': dns.attrib['DynamicDNSStatus'].lower() == 'true',
-            'Failover DNS': dns.attrib['IsFailover'].lower() == 'true',
+            'Type': dns.get('ProviderType'),
+            'Using NC DNS': dns.get('IsUsingOurDNS').lower() == 'true',
+            'Host records count': dns.get('HostCount'),
+            'Email type': dns.get('EmailType'),
+            'Dynamic DNS': dns.get('DynamicDNSStatus').lower() == 'true',
+            'Failover DNS': dns.get('IsFailover').lower() == 'true',
             'Nameservers': [ns.text for ns in
                             dns.findall(self._tag('Nameserver'))]
         }
@@ -228,17 +228,17 @@ class DomainAPI(Session):
 
             for domain in xml.findall(self._tag('Domain')):
                 domains.append({
-                    'Domain': domain.attrib['Name'],
-                    'ID': domain.attrib['ID'],
-                    'Owner': domain.attrib['User'],
-                    'Creation': datetime.strptime(domain.attrib['Created'],
+                    'Domain': domain.get('Name'),
+                    'ID': domain.get('ID'),
+                    'Owner': domain.get('User'),
+                    'Creation': datetime.strptime(domain.get('Created'),
                                                   '%m/%d/%Y'),
-                    'Expiration': datetime.strptime(domain.attrib['Expires'],
+                    'Expiration': datetime.strptime(domain.get('Expires'),
                                                     '%m/%d/%Y'),
-                    'WhoisGuard': domain.attrib['WhoisGuard'],
-                    'Expired': domain.attrib['IsExpired'].lower() == 'true',
-                    'Locked': domain.attrib['IsLocked'].lower() == 'true',
-                    'Auto-renew': domain.attrib['AutoRenew'].lower() == 'true',
+                    'WhoisGuard': domain.get('WhoisGuard'),
+                    'Expired': domain.get('IsExpired').lower() == 'true',
+                    'Locked': domain.get('IsLocked').lower() == 'true',
+                    'Auto-renew': domain.get('AutoRenew').lower() == 'true',
                 })
 
         return domains
@@ -265,7 +265,7 @@ class DomainAPI(Session):
         res = {}
 
         for tld in xml.findall(self._tag('Tld')):
-            tld_name = tld.attrib['Name']
+            tld_name = tld.get('Name')
             res[tld_name] = tld.attrib
             res[tld_name]['Description'] = tld.text
             del res[tld_name]['Name']
@@ -310,8 +310,8 @@ class DomainAPI(Session):
 
         result = {}
         for item in xml.findall(self._tag('DomainCheckResult')):
-            result[item.attrib['Domain']] = (
-                item.attrib['Available'] == 'true')
+            result[item.get('Domain')] = (
+                item.get('Available') == 'true')
 
         return result
 
@@ -343,18 +343,18 @@ class DomainAPI(Session):
         }).find(self._tag('DomainGetRegistrarLockResult'))
 
         if not verbose:
-            return xml.attrib['RegistrarLockStatus'].lower() == 'true'
+            return xml.get('RegistrarLockStatus').lower() == 'true'
 
         return {
-            'Domain': xml.attrib['Domain'],
+            'Domain': xml.get('Domain'),
             'RegistrarLock':
-                xml.attrib['RegistrarLockStatus'].lower() == 'true',
+                xml.get('RegistrarLockStatus').lower() == 'true',
             'ClientUpdateProhibited':
-                xml.attrib['IsClientUpdateProhibited'].lower() == 'true',
+                xml.get('IsClientUpdateProhibited').lower() == 'true',
             'ClientDeleteProhibited':
-                xml.attrib['IsClientDeleteProhibited'].lower() == 'true',
+                xml.get('IsClientDeleteProhibited').lower() == 'true',
             'ClientHold':
-                xml.attrib['IsClientHold'].lower() == 'true'
+                xml.get('IsClientHold').lower() == 'true'
         }
 
     def set_lock(self, domain: str, lock: bool = True) -> bool:
@@ -378,7 +378,7 @@ class DomainAPI(Session):
         xml = self._call(DOMAINS_SET_LOCK, query).find(
             self._tag('DomainSetRegistrarLockResult'))
 
-        return xml.attrib['IsSuccess'].lower() == 'true'
+        return xml.get('IsSuccess').lower() == 'true'
 
     def create_nameserver(self):
         pass

@@ -48,6 +48,7 @@ class Session:
         self.client_ip = client_ip
         self.url = URLS['sandbox' if sandbox else 'production']
         self.errors = []
+        self.warnings = []
         self.coupon = coupon
         self.gmt_offset = None
 
@@ -97,23 +98,29 @@ class Session:
         """
 
         url = self._form_url(command, query)
-        print(url)  # debug
+        print(url)  # debug (temp)
 
         raw_xml = urlopen(url).read().decode('utf-8')
+
+        # TODO remove later, useful during new method implementation.
+        print(raw_xml)
 
         if raw:
             return raw_xml
         else:
             xml = fromstring(raw_xml)
 
-        if xml.attrib['Status'] == 'ERROR':
+        if xml.get('Status') == 'ERROR':
             self._log_error(xml, url)
             error_message = ', '.join(
                 ["Error {}: '{}'".format(item['Number'], item['Text'])
                  for item in self.errors[-1]['Errors']])
             raise NCApiError(error_message)
-        else:
-            return xml.find(self._tag('CommandResponse'))
+        # TODO update warning logging
+        # elif xml.find(self._tag('Warning')):  # doesn't work
+        #     self._log_warning(xml, url)
+
+        return xml.find(self._tag('CommandResponse'))
 
     def _tag(self, tag: str) -> str:
         """Create tag to navigate through ElementTree.Element object.
@@ -131,20 +138,12 @@ class Session:
             'XML': tostring(xml, encoding='unicode'),
             'Time': datetime.now(),
             'Errors': [],
-            'Warnings': []
         }
 
         for error in xml.find(self._tag('Errors')).findall(self._tag('Error')):
             data['Errors'].append({
-                'Number': error.attrib['Number'],
+                'Number': error.get('Number'),
                 'Text': error.text
-            })
-
-        for warning in xml.find(self._tag('Warnings')).findall(
-                self._tag('Warning')):
-            data['Warnings'].append({
-                'Number': warning.attrib['Number'],
-                'Text': warning.text
             })
 
         command = xml.find(self._tag('RequestedCommand'))
@@ -157,6 +156,37 @@ class Session:
         data['ExecutionTime'] = float(exectime.text)
 
         self.errors.append(data)
+
+    def _log_warning(self, xml: Element, url: str) -> None:
+        """Log an API warning.
+
+        Adds errors and warnings to session.errors list.
+        """
+
+        data = {
+            'URL': url,
+            'XML': tostring(xml, encoding='unicode'),
+            'Time': datetime.now(),
+            'Warnings': []
+        }
+
+        for warning in xml.find(self._tag('Warnings')).findall(
+                self._tag('Warning')):
+            data['Warnings'].append({
+                'Number': warning.get('Number'),
+                'Text': warning.text
+            })
+
+        command = xml.find(self._tag('RequestedCommand'))
+        data['RequestedCommand'] = command.text
+
+        server = xml.find(self._tag('Server'))
+        data['Server'] = server.text
+
+        exectime = xml.find(self._tag('ExecutionTime'))
+        data['ExecutionTime'] = float(exectime.text)
+
+        self.warnings.append(data)
 
     def raw_query(self, command: str = '', query: dict = {}) -> str:
         """Create a custom query.
