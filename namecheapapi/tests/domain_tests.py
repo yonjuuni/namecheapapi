@@ -45,4 +45,4 @@ def test_domain_get_lock():
 
 
 def test_domain_set_lock():
-    return api.get_lock(DOMAIN)
+    return api.set_lock(DOMAIN, lock=True)

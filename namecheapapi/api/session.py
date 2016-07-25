@@ -105,10 +105,7 @@ class Session:
         # TODO remove later, useful during new method implementation.
         print(raw_xml)
 
-        if raw:
-            return raw_xml
-        else:
-            xml = fromstring(raw_xml)
+        xml = fromstring(raw_xml)
 
         if xml.get('Status') == 'ERROR':
             self._log_error(xml, url)
@@ -116,9 +113,12 @@ class Session:
                 ["Error {}: '{}'".format(item['Number'], item['Text'])
                  for item in self.errors[-1]['Errors']])
             raise NCApiError(error_message)
-        # TODO update warning logging
-        # elif xml.find(self._tag('Warning')):  # doesn't work
-        #     self._log_warning(xml, url)
+
+        if xml.find(self._tag('Warnings')).findall(self._tag('Warning')):
+            self._log_warning(xml, url)
+
+        if raw:
+            return raw_xml
 
         return xml.find(self._tag('CommandResponse'))
 
@@ -130,7 +130,7 @@ class Session:
     def _log_error(self, xml: Element, url: str) -> None:
         """Log an API error.
 
-        Adds errors and warnings to session.errors list.
+        Adds errors to session.errors list.
         """
 
         data = {
@@ -160,7 +160,7 @@ class Session:
     def _log_warning(self, xml: Element, url: str) -> None:
         """Log an API warning.
 
-        Adds errors and warnings to session.errors list.
+        Adds warnings to session.warnings list.
         """
 
         data = {
