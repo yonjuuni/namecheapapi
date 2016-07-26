@@ -46,3 +46,7 @@ def test_domain_get_lock():
 
 def test_domain_set_lock():
     return api.set_lock(DOMAIN, lock=True)
+
+
+def test_domain_get_nameservers():
+    return api.get_nameservers(DOMAIN)

@@ -66,8 +66,7 @@ class Session:
         if not self.gmt_offset:
             xml = fromstring(self.raw_query())
             self.gmt_offset = int(re.findall(
-                r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0]
-            )
+                r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0])
         return self.gmt_offset
 
     def _form_url(self, command: str, query: dict) -> str:

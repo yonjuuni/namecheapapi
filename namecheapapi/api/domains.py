@@ -1,3 +1,4 @@
+import collections
 import typing
 from datetime import datetime
 from datetime import timedelta
@@ -394,11 +395,55 @@ class DomainAPI(Session):
 
     def set_nameservers(self, default: bool = False):
         """default=True will set Namecheap DNS
+
+        https://www.namecheap.com/support/api/methods/domains-dns/set-default.aspx
+        https://www.namecheap.com/support/api/methods/domains-dns/set-custom.aspx
+
+
         """
         pass
 
-    def get_nameservers(self):
-        pass
+    def get_nameservers(self, domain: typing.Sequence) -> dict:
+        """Get list of nameservers
+
+        https://www.namecheap.com/support/api/methods/domains-dns/get-list.aspx
+
+        Arguments:
+            domain -- domain name. Can be a string ('domain.tld') or a
+                list/tuple of two elements: ('domain', 'tld').
+
+        Returns:
+            A dict with domain nameserver information
+            {'Domain': domain,
+             'Namecheap DNS': True/False,
+             'Premium DNS': True/False,
+             'FreeDNS': True/False,
+             'Nameservers': ['nameserver 1', 'nameserver 2', etc..]
+            }
+
+        Raises:
+            TypeError -- if domain argument is not str or tuple.
+        """
+        if isinstance(domain, str):
+            host_name, _, tld = domain.partition('.')
+        elif isinstance(domain, collections.Sequence):
+            host_name, tld = domain
+        else:
+            raise TypeError('Argument "domain" must either be a string or '
+                            'a sequence of two strings (domain and TLD).')
+
+        xml = self._call(
+            DOMAINS_GET_NAMESERVERS, {'SLD': host_name, 'TLD': tld}).find(
+                self._tag('DomainDNSGetListResult'))
+
+        return {
+            'Domain': xml.get('Domain'),
+            'Namecheap DNS': xml.get('IsUsingOurDNS').lower() == 'true',
+            'Premium DNS': xml.get('IsPremiumDNS').lower() == 'true',
+            'FreeDNS': xml.get('IsUsingFreeDNS').lower() == 'true',
+            'Nameservers':
+                [ns.text for ns in xml.findall(self._tag('Nameserver'))]
+        }
 
     def get_host_records(self):
         pass

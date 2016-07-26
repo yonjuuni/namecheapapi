@@ -16,6 +16,7 @@ Implemented methods:
 * domains.reactivate (namecheap.domains.reactivate)
 * domains.get_lock (namecheap.domains.getRegistrarLock)
 * domains.set_lock (namecheap.domains.setRegistrarLock)
+* domains.get_nameservers (namecheap.domains.dns.getList)
 
 Next up:
 - domains.register (namecheap.domains.create)
@@ -27,7 +28,6 @@ Next up:
 Required for v0.01:
 - domains.get_host_records
 - domains.set_host_records
-- domains.get_nameservers
 - domains.set_nameservers
 
 
@@ -35,6 +35,7 @@ Testing.
 
 1. Install nosetests (pip3 install nose)
 2. Create config.py in namecheapapi/tests/ directory, fill it in:
+
 * API_KEY = 'string' -- API key that you got from Namecheap
 * API_USER = 'string' -- your Namecheap username
 * USERNAME = 'string' -- in most cases it would be your Namecheap username
