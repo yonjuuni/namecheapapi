@@ -42,4 +42,4 @@ api = DomainAPI(
     coupon=COUPON
 )
 
-print(api.renew('s1ck.club', check_status_first=True))
+print(api.set_nameservers('adsasdasdsadsad.com', set_default=True))

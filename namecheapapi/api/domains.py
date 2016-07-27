@@ -393,15 +393,43 @@ class DomainAPI(Session):
     def get_nameserver_info(self):
         pass
 
-    def set_nameservers(self, default: bool = False):
-        """default=True will set Namecheap DNS
+    def set_nameservers(self, domain: typing.Sequence,
+                        nameservers: typing.Iterable = None,
+                        set_default: bool = False) -> bool:
+        """Set nameservers for a domain name.
 
         https://www.namecheap.com/support/api/methods/domains-dns/set-default.aspx
         https://www.namecheap.com/support/api/methods/domains-dns/set-custom.aspx
 
+        Arguments:
+            domain -- domain name. Can be a string ('domain.tld') or a
+                list/tuple of two elements: ('domain', 'tld').
+            nameservers -- iterable with nameserver strings. In most
+                cases you should provide from 2 to 12 nameservers, some
+                TLDs do have different max number, though.
+            set_default -- setting to True will set Namecheap DNS
 
+        Returns:
+            bool value with update status.
         """
-        pass
+        host_name, tld = self._normalize_domain(domain)
+
+        if set_default:
+            xml = self._call(
+                DOMAINS_SET_DEFAULT_NS, {'SLD': host_name, 'TLD': tld}).find(
+                self._tag('DomainDNSSetDefaultResult'))
+
+        else:
+            query = {
+                'SLD': host_name,
+                'TLD': tld,
+                'Nameservers': ','.join(nameservers)
+            }
+            xml = self._call(
+                DOMAINS_SET_CUSTOM_NS, query).find(
+                self._tag('DomainDNSSetCustomResult'))
+
+        return xml.get('Updated').lower() == 'true'
 
     def get_nameservers(self, domain: typing.Sequence) -> dict:
         """Get list of nameservers
@@ -424,13 +452,7 @@ class DomainAPI(Session):
         Raises:
             TypeError -- if domain argument is not str or tuple.
         """
-        if isinstance(domain, str):
-            host_name, _, tld = domain.partition('.')
-        elif isinstance(domain, collections.Sequence):
-            host_name, tld = domain
-        else:
-            raise TypeError('Argument "domain" must either be a string or '
-                            'a sequence of two strings (domain and TLD).')
+        host_name, tld = self._normalize_domain(domain)
 
         xml = self._call(
             DOMAINS_GET_NAMESERVERS, {'SLD': host_name, 'TLD': tld}).find(
@@ -468,3 +490,14 @@ class DomainAPI(Session):
 
     def get_transfer_list(self):
         pass
+
+    def _normalize_domain(self, domain: typing.Sequence) -> tuple:
+        if isinstance(domain, str):
+            host_name, _, tld = domain.partition('.')
+        elif isinstance(domain, collections.Sequence):
+            host_name, tld = domain
+        else:
+            raise TypeError('Argument "domain" must either be a string or '
+                            'a sequence of two strings (domain and TLD).')
+
+        return host_name, tld

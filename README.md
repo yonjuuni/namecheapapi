@@ -17,21 +17,20 @@ Implemented methods:
 * domains.get_lock (namecheap.domains.getRegistrarLock)
 * domains.set_lock (namecheap.domains.setRegistrarLock)
 * domains.get_nameservers (namecheap.domains.dns.getList)
+* domains.set_nameservers (namecheap.domains.dns.setCustom, namecheap.domains.dns.setDefault)
 
-Next up:
+Required for v0.01:
 - domains.register (namecheap.domains.create)
 - domains.create_nameserver (namecheap.domains.ns.create)
 - domains.delete_nameserver (namecheap.domains.ns.delete)
 - domains.update_nameserver (namecheap.domains.ns.update)
 - domains.get_nameserver_info (namecheap.domains.ns.getInfo)
-
-Required for v0.01:
-- domains.get_host_records
-- domains.set_host_records
-- domains.set_nameservers
+- domains.get_host_records (namecheap.domains.dns.getHosts)
+- domains.set_host_records (namecheap.domains.dns.setHosts)
 
 
-Testing.
+
+Testing (does have one dependency):
 
 1. Install nosetests (pip3 install nose)
 2. Create config.py in namecheapapi/tests/ directory, fill it in:
@@ -43,6 +42,7 @@ Testing.
 * SANDBOX = True (recommended!)
 * COUPON = 'string' -- coupon code if you have any, '' otherwise
 * DOMAIN = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
+
 3. Run 'nosetests /path/to/namecheapapi/dir'
 
 I'll keep adding more tests with time.
