@@ -7,7 +7,12 @@ For now I'm trying not to use anything outside the standard library.
 Most methods are more or less well-documented, so don't be shy to use help(). Also type hints (PEP 484) are available for every method.
 Method names are NOT in 100% match with those from Namecheap, but they are more pythonic and make more sense at times.
 
-Example usage.
+Installation
+------
+`pip install namecheapapi`
+
+Example usage
+------
 ```python
 from namecheapapi import DomainAPI
 
@@ -37,7 +42,8 @@ address = {
 print(api.register('adsasdasasdsadasdsad.com', address=address))
 ```
 
-Implemented methods:
+Implemented methods
+------
 * domains.register (namecheap.domains.create)
 * domains.check (namecheap.domains.check)
 * domains.get_info (namecheap.domains.getInfo)
@@ -50,7 +56,7 @@ Implemented methods:
 * domains.get_nameservers (namecheap.domains.dns.getList)
 * domains.set_nameservers (namecheap.domains.dns.setCustom, namecheap.domains.dns.setDefault)
 
-Next up:
+### Next up
 * domains.create_nameserver (namecheap.domains.ns.create)
 * domains.delete_nameserver (namecheap.domains.ns.delete)
 * domains.update_nameserver (namecheap.domains.ns.update)
@@ -60,7 +66,9 @@ Next up:
 
 
 
-Testing (does have one dependency):
+Testing
+------
+(does have one dependency)
 
 1. Install nosetests (pip3 install nose)
 2. Create config.py in namecheapapi/tests/ directory, fill it in:

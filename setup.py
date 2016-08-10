@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='namecheapapi',
-    version='0.1',
+    version='0.1.1',
     description='Python Namecheap API wrapper',
     classifiers=[
         'License :: OSI Approved :: MIT License',
@@ -16,8 +16,7 @@ setup(
     author='Alex Sanchez',
     author_email='alex@s1ck.org',
     license='MIT',
-    package_dir={'': 'namecheapapi'},
-    packages=find_packages('namecheapapi'),
+    packages=['namecheapapi'],
     url='https://github.com/yonjuuni/namecheapapi',
     keywords=['namecheap', 'domain', 'dns'],
     include_package_data=True,
