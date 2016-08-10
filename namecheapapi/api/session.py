@@ -3,7 +3,7 @@
 import re
 from datetime import datetime
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from xml.etree.ElementTree import fromstring
 from xml.etree.ElementTree import tostring
 from xml.etree.ElementTree import Element
@@ -69,23 +69,24 @@ class Session:
                 r'-?\d+', xml.find(self._tag('GMTTimeDifference')).text)[0])
         return self.gmt_offset
 
-    def _form_url(self, command: str, query: dict) -> str:
+    def _form_query(self, command: str, query: dict) -> str:
 
-        return self.url + urlencode({
+        return urlencode({
             **self._base_params,
             "Command": command,
             **query
         })
 
     def _call(self, command: str, query: dict = {},
-              raw: bool = False) -> Element:
-        """Send GET request with the API call
+              raw: bool = False, post: bool = False) -> Element:
+        """Send GET or POST request with the API call
 
         Arguments:
             command -- NC API command
             query -- key/value pairs for GET request
             raw -- used in raw_query method. Makes the method return a
                 raw XML string
+            post -- setting to True sends a POST requests instead of GET
 
         Returns:
             raw=False -- ElementTree.Element object in CommandResponse
@@ -96,13 +97,13 @@ class Session:
             NCApiError if response Status equals to 'ERROR'.
         """
 
-        url = self._form_url(command, query)
-        print(url)  # debug (temp)
-
-        raw_xml = urlopen(url).read().decode('utf-8')
-
-        # TODO remove later, useful during new method implementation.
-        print(raw_xml)
+        if post:
+            url = self.url
+            data = self._form_query(command, query).encode('ascii')
+            raw_xml = urlopen(Request(url, data)).read().decode('utf-8')
+        else:
+            url = self.url + self._form_query(command, query)
+            raw_xml = urlopen(url).read().decode('utf-8')
 
         xml = fromstring(raw_xml)
 

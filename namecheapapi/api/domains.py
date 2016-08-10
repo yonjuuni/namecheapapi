@@ -10,8 +10,107 @@ from .commands import *
 
 class DomainAPI(Session):
 
-    def register(self):
-        pass
+    def register(self, domain: str, years: int = 1, address: dict = {},
+                 nameservers: typing.Union[list, set, tuple] = None,
+                 coupon: str = None, add_whoisguard: bool = True,
+                 enable_whoisguard: bool = True) -> dict:
+        """Register a domain name.
+
+        https://www.namecheap.com/support/api/methods/domains/create.aspx
+
+        NOTE: this method will charge your Namecheap account!
+
+        Arguments:
+            domain -- domain name to register
+            years -- years to register the domain for
+            address -- a dict with the address values.
+
+                REQUIRED address dict keys:
+                    'FirstName', 'LastName', 'Address1', 'City',
+                    'StateProvince', 'PostalCode', 'Country', 'Phone',
+                    'EmailAddress'
+                OPTIONAL address dict keys:
+                    'OrganizationName', 'JobTitle', 'Address2',
+                    'StateProvinceChoice', 'PhoneExt', 'Fax'
+
+                Please refer to Namecheap's API docs for help on how
+                each field should be formatted.
+
+                example_address = {
+                    'FirstName': 'Peter',
+                    'LastName': 'Griffin',
+                    'Address1': '31 Spooner St.',
+                    'City': 'Quahog',
+                    'StateProvince': 'RI',
+                    'PostalCode': '00093',
+                    'Country': 'US',
+                    'Phone': '+1.123456789',
+                    'EmailAddress': 'peter@griffin.tv'
+                }
+
+            nameservers -- list/set/tuple with nameservers (str)
+            coupon -- optional coupon code
+            add_whoisguard -- indicate whether you want to add a free
+                WhoisGuard with your domain (only applies to eligible
+                domains)
+            enable_whoisguard -- indicate whether you want to enable
+                free WhoisGuard
+        """
+
+        # Create a bigass query
+        query = {
+            'DomainName': domain,
+            'Years': years,
+            'AddFreeWhoisGuard': add_whoisguard,
+            'WGEnabled': enable_whoisguard,
+        }
+
+        # Optional query parameters
+        if coupon:
+            query['PromotionCode'] = coupon
+        elif self.coupon:
+            query['PromotionCode'] = coupon
+
+        if nameservers:
+            query['Nameservers'] = ','.join(nameservers)
+
+        # Big address query portion.
+        # Creates entries like 'RegistrantFirstName' with their values.
+        address_types = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
+
+        required_parameters = [
+            'FirstName', 'LastName', 'Address1', 'City', 'StateProvince',
+            'PostalCode', 'Country', 'Phone', 'EmailAddress'
+        ]
+        optional_parameters = [
+            'OrganizationName', 'JobTitle', 'Address2', 'StateProvinceChoice',
+            'PhoneExt', 'Fax'
+        ]
+
+        for address_type in address_types:
+
+            # Optional parameters
+            for param in optional_parameters:
+                if address.get(param):
+                    query[address_type + param] = address.get(param)
+
+            # Required parameters
+            for param in required_parameters:
+                query[address_type + param] = address[param]
+
+        xml = self._call(DOMAINS_REGISTER, query, post=True).find(
+            self._tag('DomainCreateResult'))
+
+        return {
+            'Domain': xml.get('Domain'),
+            'Success': xml.get('Registered').lower() == 'true',
+            'ChargedAmount': float(xml.get('ChargedAmount')),
+            'ID': int(xml.get('DomainID')),
+            'OrderID': int(xml.get('OrderID')),
+            'TransactionID': int(xml.get('TransactionID')),
+            'WhoisGuardEnabled': xml.get('WhoisguardEnable').lower() == 'true',
+            'NonRealTimeDomain': xml.get('NonRealTimeDomain').lower() == 'true'
+        }
 
     def renew(self, domain: str, years: int = 1, coupon: str = None,
               check_status_first: bool = False) -> dict:

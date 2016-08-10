@@ -42,4 +42,16 @@ api = DomainAPI(
     coupon=COUPON
 )
 
-print(api.set_nameservers('adsasdasdsadsad.com', set_default=True))
+address = {
+    'FirstName': 'Peter',
+    'LastName': 'Griffin',
+    'Address1': '31 Spooner St.',
+    'City': 'Quahog',
+    'StateProvince': 'RI',
+    'PostalCode': '00093',
+    'Country': 'US',
+    'Phone': '+1.123456789',
+    'EmailAddress': 'peter@griffin.tv'
+}
+
+print(api.register('adsasdasasdsadasdsad.com', address=address))
