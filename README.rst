@@ -76,13 +76,13 @@ Testing
 1. Install nosetests (``pip install nose``)
 2. Create ``config.py`` in ``namecheapapi/tests/`` directory, fill it in:
 
-  * ``API_KEY`` = 'string' -- API key that you got from Namecheap
-  * ``API_USER`` = 'string' -- your Namecheap username
-  * ``USERNAME`` = 'string' -- in most cases it would be your Namecheap username
-  * ``CLIENT_IP`` = 'string' -- your public IP address (MUST be whitelisted in your Namecheap account)
-  * ``SANDBOX`` = True (recommended!)
-  * ``COUPON`` = 'string' -- coupon code if you have any, '' otherwise
-  * ``DOMAIN`` = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
+* ``API_KEY`` = 'string' -- API key that you got from Namecheap
+* ``API_USER`` = 'string' -- your Namecheap username
+* ``USERNAME`` = 'string' -- in most cases it would be your Namecheap username
+* ``CLIENT_IP`` = 'string' -- your public IP address (MUST be whitelisted in your Namecheap account)
+* ``SANDBOX`` = True (recommended!)
+* ``COUPON`` = 'string' -- coupon code if you have any, '' otherwise
+* ``DOMAIN`` = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
 
 3. Run ``nosetests /path/to/namecheapapi/dir``
 
