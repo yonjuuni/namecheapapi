@@ -11,6 +11,8 @@ Method names are NOT in 100% match with those from Namecheap, but they are more 
 
 Installation
 ------------
+::
+
   $ pip install namecheapapi
 
 Example usage
