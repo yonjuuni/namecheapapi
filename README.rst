@@ -1,4 +1,6 @@
-# namecheapapi
+============
+namecheapapi
+============
 Python Namecheap API wrapper.
 
 Work in progress, see docstring in work.py for current usage tips. Official docs: https://www.namecheap.com/support/api
@@ -8,42 +10,42 @@ Most methods are more or less well-documented, so don't be shy to use help(). Al
 Method names are NOT in 100% match with those from Namecheap, but they are more pythonic and make more sense at times.
 
 Installation
-------
-`pip install namecheapapi`
+------------
+  $ pip install namecheapapi
 
 Example usage
-------
-```python
-from namecheapapi import DomainAPI
+-------------
+::
 
-api = DomainAPI(
-    api_user='api_user',
-    api_key='api_key,
-    username='username',  # usually the same as api_user
-    client_ip='your IP address',
-    sandbox=True,  # recommended for testing
-    coupon='coupon'  # optional
-)
+    from namecheapapi import DomainAPI
 
-print(api.check('google.com'))
+    api = DomainAPI(
+        api_user='api_user',
+        api_key='api_key,
+        username='username',  # usually the same as api_user
+        client_ip='your IP address',
+        sandbox=True,  # recommended for testing
+        coupon='coupon'  # optional
+    )
 
-address = {
-    'FirstName': 'Peter',
-    'LastName': 'Griffin',
-    'Address1': '31 Spooner St.',
-    'City': 'Quahog',
-    'StateProvince': 'RI',
-    'PostalCode': '00093',
-    'Country': 'US',
-    'Phone': '+1.123456789',
-    'EmailAddress': 'peter@griffin.tv'
-}
+    print(api.check('google.com'))
 
-print(api.register('adsasdasasdsadasdsad.com', address=address))
-```
+    address = {
+        'FirstName': 'Peter',
+        'LastName': 'Griffin',
+        'Address1': '31 Spooner St.',
+        'City': 'Quahog',
+        'StateProvince': 'RI',
+        'PostalCode': '00093',
+        'Country': 'US',
+        'Phone': '+1.123456789',
+        'EmailAddress': 'peter@griffin.tv'
+    }
+
+    print(api.register('adsasdasasdsadasdsad.com', address=address))
 
 Implemented methods
-------
+-------------------
 * domains.register (namecheap.domains.create)
 * domains.check (namecheap.domains.check)
 * domains.get_info (namecheap.domains.getInfo)
@@ -56,7 +58,8 @@ Implemented methods
 * domains.get_nameservers (namecheap.domains.dns.getList)
 * domains.set_nameservers (namecheap.domains.dns.setCustom, namecheap.domains.dns.setDefault)
 
-### Next up
+Next up
+-------
 * domains.create_nameserver (namecheap.domains.ns.create)
 * domains.delete_nameserver (namecheap.domains.ns.delete)
 * domains.update_nameserver (namecheap.domains.ns.update)
@@ -64,21 +67,21 @@ Implemented methods
 * domains.get_host_records (namecheap.domains.dns.getHosts)
 * domains.set_host_records (namecheap.domains.dns.setHosts)
 
-
-
 Testing
-------
+-------
 (does have one dependency)
 
-1. Install nosetests (pip3 install nose)
-2. Create config.py in namecheapapi/tests/ directory, fill it in:
-  * API_KEY = 'string' -- API key that you got from Namecheap
-  * API_USER = 'string' -- your Namecheap username
-  * USERNAME = 'string' -- in most cases it would be your Namecheap username
-  * CLIENT_IP = 'string' -- your public IP address (MUST be whitelisted in your Namecheap account)
-  * SANDBOX = True (recommended!)
-  * COUPON = 'string' -- coupon code if you have any, '' otherwise
-  * DOMAIN = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
-3. Run 'nosetests /path/to/namecheapapi/dir'
+1. Install nosetests (``pip install nose``)
+2. Create ``config.py`` in ``namecheapapi/tests/`` directory, fill it in:
+
+  * ``API_KEY`` = 'string' -- API key that you got from Namecheap
+  * ``API_USER`` = 'string' -- your Namecheap username
+  * ``USERNAME`` = 'string' -- in most cases it would be your Namecheap username
+  * ``CLIENT_IP`` = 'string' -- your public IP address (MUST be whitelisted in your Namecheap account)
+  * ``SANDBOX`` = True (recommended!)
+  * ``COUPON`` = 'string' -- coupon code if you have any, '' otherwise
+  * ``DOMAIN`` = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
+
+3. Run ``nosetests /path/to/namecheapapi/dir``
 
 I'll keep adding more tests with time.
