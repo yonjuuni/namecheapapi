@@ -24,7 +24,7 @@ Features
 * get a list of your Namecheap domains
 * set/remove registrar lock
 
- ...and more.
+... and more.
 
 
 Namecheap API
