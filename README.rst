@@ -1,16 +1,34 @@
 ============
 namecheapapi
 ============
-Python Namecheap API wrapper.
+Python Namecheap API wrapper for simple domain name registration and management.
 
-This is work in progress. Official docs: https://www.namecheap.com/support/api
+NOTE: you will need API key from Namecheap to use this module (see below).
+
+Overview
+--------
+
+This is work in progress. Official API docs: https://www.namecheap.com/support/api
 
 For now I'm trying not to use anything outside the standard library.
-Most methods are more or less well-documented, so don't be shy to use help(). Also type hints (PEP 484) are available for every method.
-Method names are NOT in 100% match with those from Namecheap, but they are more pythonic and make more sense at times.
+Most methods are more or less well-documented, so don't be shy to use help(). Type hints (PEP 484) are available for every method.
+Method names are NOT in 100% match with those from Namecheap, but they are more pythonic and/or hopefully make more sense.
 
-Namecheap API overview
-----------------------
+Features
+--------
+* domain registration/renewal
+* domain availability check
+* DNS updates
+* WHOIS information updates
+* get your domain's information
+* get a list of your Namecheap domains
+* set/remove registrar lock
+
+ ...and more.
+
+
+Namecheap API
+-------------
 
 Namecheap offers two API endpoints: sandbox (for development & testing) and production (for real world).
 You can sign up for a free sandbox account at https://www.sandbox.namecheap.com/ and activate API access at
