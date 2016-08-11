@@ -3,11 +3,27 @@ namecheapapi
 ============
 Python Namecheap API wrapper.
 
-Work in progress, see docstring in work.py for current usage tips. Official docs: https://www.namecheap.com/support/api
+This is work in progress. Official docs: https://www.namecheap.com/support/api
 
 For now I'm trying not to use anything outside the standard library.
 Most methods are more or less well-documented, so don't be shy to use help(). Also type hints (PEP 484) are available for every method.
 Method names are NOT in 100% match with those from Namecheap, but they are more pythonic and make more sense at times.
+
+Namecheap API FAQ
+-----------------
+
+Namecheap offers two API endpoints: sandbox (for development & testing) and production (for real world).
+You can sign up for a free sandbox account at https://www.sandbox.namecheap.com/ and activate API access at
+https://ap.www.sandbox.namecheap.com/Profile/Tools/ApiAccess
+
+Make sure to add your public IP address in Whitelisted IPs section.
+
+Keep in mind that sandbox domains are not 'real', i.e. they exist only
+in Namecheap sandbox (not on the actual Web). With that you may be able
+to see google.com as available for registration. At the same time, you
+will need to make sure to register your 'virtual' domains if you want to
+test domain-specific options, such as renewal, DNS updates, etc.
+
 
 Installation
 ------------
