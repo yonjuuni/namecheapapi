@@ -54,4 +54,4 @@ address = {
     'EmailAddress': 'peter@griffin.tv'
 }
 
-print(api.register('adsasdasasdsadasdsad.com', address=address))
+print(api.set_contacts('adsasdasasdsadasdsad.com', address))

@@ -17,34 +17,64 @@ Installation
 
 Example usage
 -------------
-::
+.. code-block:: python
 
-    from namecheapapi import DomainAPI
+    # Initialize API
+    >>> from namecheapapi import DomainAPI
+    >>> api = DomainAPI(
+    ...    api_user='api_user',
+    ...    api_key='api_key,
+    ...    username='username',  # usually the same as api_user
+    ...    client_ip='your IP address',
+    ...    sandbox=True,  # recommended for testing
+    ...    coupon='coupon'  # optional
+    ...)
+    >>>
 
-    api = DomainAPI(
-        api_user='api_user',
-        api_key='api_key,
-        username='username',  # usually the same as api_user
-        client_ip='your IP address',
-        sandbox=True,  # recommended for testing
-        coupon='coupon'  # optional
-    )
+    # Check availability of google.com
+    >>> api.check('google.com')
+    {'google.com': False}
 
-    print(api.check('google.com'))
+    # Check multiple domains at once
+    >>> api.check(['asdfghjhgfdsa.com', 'google.com'])
+    {'google.com': False, 'asdfghjhgfdsa.com': True}
 
-    address = {
-        'FirstName': 'Peter',
-        'LastName': 'Griffin',
-        'Address1': '31 Spooner St.',
-        'City': 'Quahog',
-        'StateProvince': 'RI',
-        'PostalCode': '00093',
-        'Country': 'US',
-        'Phone': '+1.123456789',
-        'EmailAddress': 'peter@griffin.tv'
-    }
+    # Register a domain
+    >>> address = {
+    ...    'FirstName': 'Peter',
+    ...    'LastName': 'Griffin',
+    ...    'Address1': '31 Spooner St.',
+    ...    'City': 'Quahog',
+    ...    'StateProvince': 'RI',
+    ...    'PostalCode': '00093',
+    ...    'Country': 'US',
+    ...    'Phone': '+1.123456789',
+    ...    'EmailAddress': 'peter@griffin.tv'
+    ...}
+    >>> api.register('asdfghjhgfdsa.com', address=address)
+    {'NonRealTimeDomain': False, 'TransactionID': 1216215, 'WhoisGuardEnabled': False, 'Domain': 'asdfghjhgfdsa.com', 'OrderID': 823656, 'Success': True, 'ChargedAmount': 10.87, 'ID': 117154}
 
-    print(api.register('adsasdasasdsadasdsad.com', address=address))
+    # Custom query (a raw XML response is returned)
+    >>> q = api.raw_query(command='namecheap.domains.transfer.getList', query={})
+    >>> print(q)
+    <?xml version="1.0" encoding="utf-8"?>
+    <ApiResponse Status="OK" xmlns="http://api.namecheap.com/xml.response">
+      <Errors />
+      <Warnings />
+      <RequestedCommand>namecheap.domains.transfer.getlist</RequestedCommand>
+      <CommandResponse Type="namecheap.domains.transfer.getList">
+        <TransferGetListResult />
+        <Paging>
+          <TotalItems>0</TotalItems>
+          <CurrentPage>1</CurrentPage>
+          <PageSize>20</PageSize>
+        </Paging>
+      </CommandResponse>
+      <Server>PHX01SBAPI01</Server>
+      <GMTTimeDifference>--4:00</GMTTimeDifference>
+      <ExecutionTime>0.01</ExecutionTime>
+    </ApiResponse>
+
 
 Implemented methods
 -------------------
@@ -59,6 +89,8 @@ Implemented methods
 * domains.set_lock (namecheap.domains.setRegistrarLock)
 * domains.get_nameservers (namecheap.domains.dns.getList)
 * domains.set_nameservers (namecheap.domains.dns.setCustom, namecheap.domains.dns.setDefault)
+* domains.get_contacts (namecheap.domains.getContacts)
+* domains.set_contacts (namecheap.domains.setContacts)
 
 Next up
 -------
@@ -86,4 +118,21 @@ Testing
 
 3. Run ``nosetests /path/to/namecheapapi/dir``
 
-I'll keep adding more tests with time.
+Changelog
+---------
+
+0.2
+~~~~~
+
+* documentation update
+* domains.get_contacts/set_contacts methods added
+
+0.1.1
+~~~~~
+
+* First published working version.
+
+Author
+______
+
+`Alex Sanchez <mailto:alex@s1ck.org>`_.

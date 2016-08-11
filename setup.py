@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='namecheapapi',
-    version='0.1.1',
+    version='0.2',
     description='Python Namecheap API wrapper',
     classifiers=[
         'License :: OSI Approved :: MIT License',

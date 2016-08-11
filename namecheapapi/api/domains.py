@@ -7,6 +7,16 @@ from xml.etree.ElementTree import fromstring
 from .session import Session
 from .commands import *
 
+ADDRESS_TYPES = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
+REQUIRED_ADDRESS_PARAMS = [
+    'FirstName', 'LastName', 'Address1', 'City', 'StateProvince',
+    'PostalCode', 'Country', 'Phone', 'EmailAddress'
+]
+OPTIONAL_ADDRESS_PARAMS = [
+    'OrganizationName', 'JobTitle', 'Address2', 'StateProvinceChoice',
+    'PhoneExt', 'Fax'
+]
+
 
 class DomainAPI(Session):
 
@@ -74,29 +84,9 @@ class DomainAPI(Session):
         if nameservers:
             query['Nameservers'] = ','.join(nameservers)
 
-        # Big address query portion.
-        # Creates entries like 'RegistrantFirstName' with their values.
-        address_types = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
+        address = self._build_address_dict(address)
 
-        required_parameters = [
-            'FirstName', 'LastName', 'Address1', 'City', 'StateProvince',
-            'PostalCode', 'Country', 'Phone', 'EmailAddress'
-        ]
-        optional_parameters = [
-            'OrganizationName', 'JobTitle', 'Address2', 'StateProvinceChoice',
-            'PhoneExt', 'Fax'
-        ]
-
-        for address_type in address_types:
-
-            # Optional parameters
-            for param in optional_parameters:
-                if address.get(param):
-                    query[address_type + param] = address.get(param)
-
-            # Required parameters
-            for param in required_parameters:
-                query[address_type + param] = address[param]
+        query = {**query, **address}
 
         xml = self._call(DOMAINS_REGISTER, query, post=True).find(
             self._tag('DomainCreateResult'))
@@ -362,40 +352,41 @@ class DomainAPI(Session):
         """
         xml = self._call(DOMAINS_GET_TLD_LIST).find(self._tag('Tlds'))
 
-        res = {}
+        result = {}
 
         for tld in xml.findall(self._tag('Tld')):
             tld_name = tld.get('Name')
-            res[tld_name] = tld.attrib
-            res[tld_name]['Description'] = tld.text
-            del res[tld_name]['Name']
+            result[tld_name] = tld.attrib
+            result[tld_name]['Description'] = tld.text
+            del result[tld_name]['Name']
 
             # Normalize dict values
-            for key in res[tld_name]:
-                if res[tld_name][key].lower() == 'false':
-                    res[tld_name][key] = False
-                elif res[tld_name][key].lower() == 'true':
-                    res[tld_name][key] = True
-                elif res[tld_name][key].lower() == '':
-                    res[tld_name][key] = None
+            for key in result[tld_name]:
+                if result[tld_name][key].lower() == 'false':
+                    result[tld_name][key] = False
+                elif result[tld_name][key].lower() == 'true':
+                    result[tld_name][key] = True
+                elif result[tld_name][key].lower() == '':
+                    result[tld_name][key] = None
                 else:
                     try:
-                        int(res[tld_name][key])
+                        int(result[tld_name][key])
                     except ValueError:
                         pass
                     else:
-                        res[tld_name][key] = int(res[tld_name][key])
+                        result[tld_name][key] = int(result[tld_name][key])
 
-        return res
+        return result
 
-    def check(self, domains: typing.Iterable[str]) -> typing.Dict[str, bool]:
+    def check(self, domains: typing.Union[str, list, tuple,
+              set]) -> typing.Dict[str, bool]:
         """Check domain availability.
 
         https://www.namecheap.com/support/api/methods/domains/check.aspx
 
         Arguments:
             domains -- any iterable (str for single domain; list, set,
-                dict for multiple domains)
+                tuple for multiple domains)
 
         Returns:
             Dict with boolean values for domain availability.
@@ -415,11 +406,100 @@ class DomainAPI(Session):
 
         return result
 
-    def get_contacts(self):
-        pass
+    def get_contacts(self, domain: str) -> dict:
+        """Obtain contact details for a domain.
 
-    def set_contacts(self):
-        pass
+        https://www.namecheap.com/support/api/methods/domains/get-contacts.aspx
+
+        Arguments:
+            domain -- domain name
+
+        Returns:
+            A dict with contact details:
+
+            {'Registrant': {'Address1': '31 Spooner St.',
+                       'City': 'Quahog',
+                       'Country': 'US',
+                       'EmailAddress': 'peter@griffin.tv',
+                       'FirstName': 'Peter',
+                       'LastName': 'Griffin',
+                       ....},
+            'Admin': {'Address1': '31 Spooner St.',
+                      'City': 'Quahog',
+                      'Country': 'US',
+                      'EmailAddress': 'peter@griffin.tv',
+                      'FirstName': 'Peter',
+                      'LastName': 'Griffin',
+                       ........},
+            ......}
+
+        """
+        xml = self._call(DOMAINS_GET_CONTACTS, {'DomainName': domain}).find(
+            self._tag('DomainContactsResult'))
+
+        result = {}
+
+        types = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
+        fields = [
+            'FirstName', 'LastName', 'Address1', 'City', 'StateProvince',
+            'PostalCode', 'Country', 'Phone', 'EmailAddress',
+            'OrganizationName', 'JobTitle', 'Address2', 'StateProvinceChoice',
+            'PhoneExt', 'Fax'
+        ]
+
+        for _type in types:
+            type_xml = xml.find(self._tag(_type))
+            result[_type] = {
+                'ReadOnly': type_xml.get('ReadOnly').lower() == 'true'}
+            for field in fields:
+                field_xml = type_xml.find(self._tag(field))
+                if field_xml.text:
+                    result[_type][field] = field_xml.text
+
+        return result
+
+    def set_contacts(self, domain: str, address: dict) -> bool:
+        """Set contact information for your domain
+
+        https://www.namecheap.com/support/api/methods/domains/set-contacts.aspx
+
+        Arguments:
+            domain -- domain name
+            address -- a dict with the address values.
+
+                REQUIRED address dict keys:
+                    'FirstName', 'LastName', 'Address1', 'City',
+                    'StateProvince', 'PostalCode', 'Country', 'Phone',
+                    'EmailAddress'
+                OPTIONAL address dict keys:
+                    'OrganizationName', 'JobTitle', 'Address2',
+                    'StateProvinceChoice', 'PhoneExt', 'Fax'
+
+                Please refer to Namecheap's API docs for help on how
+                each field should be formatted.
+
+                example_address = {
+                    'FirstName': 'Peter',
+                    'LastName': 'Griffin',
+                    'Address1': '31 Spooner St.',
+                    'City': 'Quahog',
+                    'StateProvince': 'RI',
+                    'PostalCode': '00093',
+                    'Country': 'US',
+                    'Phone': '+1.123456789',
+                    'EmailAddress': 'peter@griffin.tv'
+                }
+        Returns:
+            boolean value indicating success/failure of the operation
+        """
+
+        address = self._build_address_dict(address)
+        query = {'DomainName': domain, **address}
+
+        xml = self._call(DOMAINS_SET_CONTACTS, query, post=True).find(
+            self._tag('DomainSetContactResult'))
+
+        return xml.get('IsSuccess').lower() == 'true'
 
     def get_lock(self, domain: str, verbose: bool = False) -> bool:
         """Get registrar lock status
@@ -600,3 +680,21 @@ class DomainAPI(Session):
                             'a sequence of two strings (domain and TLD).')
 
         return host_name, tld
+
+    def _build_address_dict(self, address: dict) -> dict:
+
+        result = {}
+
+        # Creates entries like 'RegistrantFirstName' with their values.
+        for address_type in ADDRESS_TYPES:
+
+            # Optional parameters
+            for param in OPTIONAL_ADDRESS_PARAMS:
+                if address.get(param):
+                    result[address_type + param] = address.get(param)
+
+            # Required parameters
+            for param in REQUIRED_ADDRESS_PARAMS:
+                result[address_type + param] = address[param]
+
+        return result
