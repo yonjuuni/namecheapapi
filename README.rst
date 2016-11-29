@@ -155,8 +155,13 @@ Testing
 Changelog
 ---------
 
-0.2
+0.2.1
 ~~~~~
+
+* minor bugfixes
+
+0.2
+~~~
 
 * documentation update
 * domains.get_contacts/set_contacts methods added

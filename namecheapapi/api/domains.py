@@ -79,7 +79,7 @@ class DomainAPI(Session):
         if coupon:
             query['PromotionCode'] = coupon
         elif self.coupon:
-            query['PromotionCode'] = coupon
+            query['PromotionCode'] = self.coupon
 
         if nameservers:
             query['Nameservers'] = ','.join(nameservers)
@@ -126,6 +126,12 @@ class DomainAPI(Session):
 
         *check_status_first is experimental, use with caution.
         """
+        if coupon:
+            query['PromotionCode'] = coupon
+        elif self.coupon:
+            coupon = self.coupon
+            query['PromotionCode'] = coupon
+
         if check_status_first:
             self._get_gmt_offset()
             domain_info = self.get_info(domain)
@@ -134,11 +140,6 @@ class DomainAPI(Session):
                 return self.reactivate(domain, coupon=coupon)
 
         query = {'DomainName': domain, 'Years': years}
-
-        if coupon:
-            query['PromotionCode'] = coupon
-        elif self.coupon:
-            query['PromotionCode'] = coupon
 
         xml = self._call(DOMAINS_RENEW, query).find(
             self._tag('DomainRenewResult'))
@@ -183,7 +184,7 @@ class DomainAPI(Session):
         if coupon:
             query['PromotionCode'] = coupon
         elif self.coupon:
-            query['PromotionCode'] = coupon
+            query['PromotionCode'] = self.coupon
 
         xml = self._call(DOMAINS_REACTIVATE, query).find(
             self._tag('DomainReactivateResult'))
@@ -372,7 +373,7 @@ class DomainAPI(Session):
                     try:
                         int(result[tld_name][key])
                     except ValueError:
-                        pass
+                        continue
                     else:
                         result[tld_name][key] = int(result[tld_name][key])
 
@@ -402,7 +403,7 @@ class DomainAPI(Session):
         result = {}
         for item in xml.findall(self._tag('DomainCheckResult')):
             result[item.get('Domain')] = (
-                item.get('Available') == 'true')
+                item.get('Available').lower() == 'true')
 
         return result
 
@@ -439,19 +440,11 @@ class DomainAPI(Session):
 
         result = {}
 
-        types = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
-        fields = [
-            'FirstName', 'LastName', 'Address1', 'City', 'StateProvince',
-            'PostalCode', 'Country', 'Phone', 'EmailAddress',
-            'OrganizationName', 'JobTitle', 'Address2', 'StateProvinceChoice',
-            'PhoneExt', 'Fax'
-        ]
-
-        for _type in types:
+        for _type in ADDRESS_TYPES:
             type_xml = xml.find(self._tag(_type))
             result[_type] = {
                 'ReadOnly': type_xml.get('ReadOnly').lower() == 'true'}
-            for field in fields:
+            for field in REQUIRED_ADDRESS_PARAMS + OPTIONAL_ADDRESS_PARAMS:
                 field_xml = type_xml.find(self._tag(field))
                 if field_xml.text:
                     result[_type][field] = field_xml.text
