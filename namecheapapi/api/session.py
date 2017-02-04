@@ -7,7 +7,7 @@ from urllib.request import urlopen, Request
 from xml.etree.ElementTree import fromstring
 from xml.etree.ElementTree import tostring
 from xml.etree.ElementTree import Element
-from .exceptions import NCApiError
+from namecheapapi.api.exceptions import NCApiError
 
 
 URLS = {

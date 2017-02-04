@@ -1,1 +1,1 @@
-from .domains import DomainAPI
+from namecheapapi.api.domains import DomainAPI

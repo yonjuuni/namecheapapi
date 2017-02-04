@@ -4,8 +4,9 @@ from datetime import datetime
 from datetime import timedelta
 from math import ceil
 from xml.etree.ElementTree import fromstring
-from .session import Session
-from .commands import *
+
+from namecheapapi.api.session import Session
+from namecheapapi.api.commands import *
 
 ADDRESS_TYPES = ['Registrant', 'Tech', 'Admin', 'AuxBilling']
 REQUIRED_ADDRESS_PARAMS = [
@@ -235,22 +236,25 @@ class DomainAPI(Session):
         # WhoisGuard details
         wg = xml.find(self._tag('Whoisguard'))
         result['WhoisGuard'] = {
-            'Enabled': wg.get('Enabled').lower() == 'true',
-            'Expiration':
-                datetime.strptime(wg.find(self._tag('ExpiredDate')).text,
-                                  '%m/%d/%Y'),
-            'ID': wg.find(self._tag('ID')).text,
-            'Email':
-                wg.find(self._tag('EmailDetails')).get('WhoisGuardEmail'),
-            'Forwarded to':
-                wg.find(self._tag('EmailDetails')).get('ForwardedTo'),
-            'Last email auto-change date':
-                wg.find(self._tag('EmailDetails')).get(
-                'LastAutoEmailChangeDate') or None,
-            'Email auto-change frequency':
-                wg.find(self._tag('EmailDetails')).get(
-                    'AutoEmailChangeFrequencyDays')
-        }
+            'Enabled': wg.get('Enabled').lower() == 'true'}
+
+        if result['WhoisGuard']['Enabled']:
+            result['WhoisGuard'].update({
+                'Expiration':
+                    datetime.strptime(wg.find(self._tag('ExpiredDate')).text,
+                                      '%m/%d/%Y'),
+                'ID': wg.find(self._tag('ID')).text,
+                'Email':
+                    wg.find(self._tag('EmailDetails')).get('WhoisGuardEmail'),
+                'Forwarded to':
+                    wg.find(self._tag('EmailDetails')).get('ForwardedTo'),
+                'Last email auto-change date':
+                    wg.find(self._tag('EmailDetails')).get(
+                    'LastAutoEmailChangeDate') or None,
+                'Email auto-change frequency':
+                    wg.find(self._tag('EmailDetails')).get(
+                        'AutoEmailChangeFrequencyDays')
+            })
 
         # Premium DNS details
         pdns = xml.find(self._tag('PremiumDnsSubscription'))

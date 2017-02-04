@@ -1,4 +1,4 @@
-from .session import Session
+from namecheapapi.api.session import Session
 
 
 class UserAPI:

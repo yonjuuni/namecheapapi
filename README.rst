@@ -126,8 +126,8 @@ Implemented methods
 * domains.get_contacts (namecheap.domains.getContacts)
 * domains.set_contacts (namecheap.domains.setContacts)
 
-Next up
--------
+TODO
+----
 * domains.create_nameserver (namecheap.domains.ns.create)
 * domains.delete_nameserver (namecheap.domains.ns.delete)
 * domains.update_nameserver (namecheap.domains.ns.update)
@@ -137,10 +137,8 @@ Next up
 
 Testing
 -------
-(does have one dependency)
 
-1. Install nosetests (``pip install nose``)
-2. Create ``config.py`` in ``namecheapapi/tests/`` directory, fill it in:
+1. Create ``config.py`` in ``namecheapapi/tests/`` directory, fill it in:
 
 * ``API_KEY`` = 'string' -- API key that you got from Namecheap
 * ``API_USER`` = 'string' -- your Namecheap username
@@ -150,7 +148,7 @@ Testing
 * ``COUPON`` = 'string' -- coupon code if you have any, '' otherwise
 * ``DOMAIN`` = 'string' -- a domain name you ALREADY HAVE in your Namecheap account
 
-3. Run ``nosetests /path/to/namecheapapi/dir``
+2. Run ``python3 -m unittest -v /path/to/namecheapapi/dir``
 
 Changelog
 ---------
@@ -172,6 +170,6 @@ Changelog
 * First published working version.
 
 Author
-______
+------
 
 `Alex Sanchez <mailto:alex@s1ck.org>`_.
