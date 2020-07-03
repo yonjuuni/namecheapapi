@@ -642,9 +642,52 @@ class DomainAPI(Session):
             'Nameservers':
                 [ns.text for ns in xml.findall(self._tag('Nameserver'))]
         }
+    
+               
+    def get_host_records(self, domain: str):
+        """Retrieves DNS host record settings for the requested domain.
 
-    def get_host_records(self):
-        pass
+        https://www.namecheap.com/support/api/methods/domains-dns/get-list.aspx
+
+        Arguments:
+            domain -- domain name. Can be a string ('domain.tld') or a
+                list/tuple of two elements: ('domain', 'tld').
+
+         Returns:
+            A dict with domain nameserver information
+            {
+                    'ID': host_id,
+                    'Type': record_type,
+                    'Address': record_address,
+                    'MXPrefs': record_mxprefs,
+                    'TTL': record_ttl,
+                }
+        """
+
+        hosts = []
+        host_name, tld = self._normalize_domain(domain)
+
+        xml = self._call(DOMAINS_GET_HOSTS, {'SLD': host_name, 'TLD': tld}).find(self._tag('DomainDNSGetHostsResult'))
+
+        for host_record in xml.findall(self._tag('host')):
+            host_id = host_record.get('HostId')
+            record_name = host_record.get('Name')
+            record_type = host_record.get('Type')
+            record_address = host_record.get('Address')
+            record_mxprefs = host_record.get('MXPrefs')
+            record_ttl = host_record.get('TTL')
+
+            hosts.append({
+                    'ID': host_id,
+                    'Name': record_name,
+                    'Type': record_type,
+                    'Address': record_address,
+                    'MXPrefs': record_mxprefs,
+                    'TTL': record_ttl,
+                })
+
+        return hosts 
+        #hosts
 
     def set_host_records(self):
         pass
