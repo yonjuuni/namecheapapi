@@ -69,11 +69,15 @@ class DomainAPI(Session):
         """
 
         # Create a bigass query
+
+        wge_ad = "yes" if add_whoisguard else "no"
+        wge_en = "yes" if add_whoisguard else "no"
+
         query = {
             'DomainName': domain,
             'Years': years,
-            'AddFreeWhoisGuard': add_whoisguard,
-            'WGEnabled': enable_whoisguard,
+            'AddFreeWhoisGuard': wge_ad,
+            'WGEnabled': wge_en,
         }
 
         # Optional query parameters
