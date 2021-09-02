@@ -72,8 +72,8 @@ class DomainAPI(Session):
         query = {
             'DomainName': domain,
             'Years': years,
-            'AddFreeWhoisGuard': add_whoisguard,
-            'WGEnabled': enable_whoisguard,
+            'AddFreeWhoisGuard': "yes" if add_whoisguard else "no",
+            'WGEnabled': "yes" if enable_whoisguard else "no",
         }
 
         # Optional query parameters
